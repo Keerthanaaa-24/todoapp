@@ -2,44 +2,34 @@ const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
 
-
-// GET all tasks
+// GET ALL
 router.get("/", async (req, res) => {
-    const tasks = await Task.find().sort({ createdAt: -1 });
-    res.json(tasks);
+  const tasks = await Task.find().sort({ createdAt: -1 });
+  res.json(tasks);
 });
 
+// GET ONE
+router.get("/:id", async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  res.json(task);
+});
 
-// CREATE task
+// CREATE
 router.post("/", async (req, res) => {
-    const { title, description } = req.body;
-
-    const newTask = new Task({
-        title,
-        description
-    });
-
-    const savedTask = await newTask.save();
-    res.json(savedTask);
+  const task = await Task.create(req.body);
+  res.json(task);
 });
 
-
-// UPDATE task
+// UPDATE
 router.put("/:id", async (req, res) => {
-    const updated = await Task.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-    );
-
-    res.json(updated);
+  const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(task);
 });
 
-
-// DELETE task
+// DELETE
 router.delete("/:id", async (req, res) => {
-    await Task.findByIdAndDelete(req.params.id);
-    res.json({ message: "Task deleted" });
+  await Task.findByIdAndDelete(req.params.id);
+  res.json({ message: "Deleted" });
 });
 
 module.exports = router;
