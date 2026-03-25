@@ -1,38 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Edit Task</title>
-<link rel="stylesheet" href="css/style.css">
+  <title>Edit Task</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
-<div class="container">
-<h2>Edit Task</h2>
+<h1>Edit Task</h1>
 
 <form id="editForm">
-<input type="text" id="title" required>
-<textarea id="description"></textarea>
+  <input type="text" id="title"><br>
+  <textarea id="description"></textarea><br>
 
-<label>
-<input type="checkbox" id="completed"> Completed
-</label>
+  <select id="priority">
+    <option>Low</option>
+    <option>Medium</option>
+    <option>High</option>
+  </select><br>
 
-<button type="submit">Update Task</button>
+  <input type="date" id="dueDate"><br>
+
+  <label>
+    <input type="checkbox" id="pinned"> Pin Task
+  </label><br>
+
+  <label>
+    <input type="checkbox" id="completed"> Completed
+  </label><br>
+
+  <button type="submit">Update</button>
 </form>
 
-<a href="index.html" class="back">← Back</a>
-
-</div>
-
-<!-- 🔥 TOAST -->
-<div id="toast" class="toast">
-  <div class="toast-icon"></div>
-  <div class="toast-content">
-    <span id="toast-message"></span>
-  </div>
-  <button class="toast-close" onclick="hideToast()">×</button>
-</div>
+<a href="index.html">⬅ Back</a>
 
 <script src="js/app.js"></script>
 </body>

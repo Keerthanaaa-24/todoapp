@@ -1,176 +1,179 @@
 const API = "/api/tasks";
 
-let currentTaskId = null;
+let allTasks = []; // store all tasks globally
 
-/* ================= TOAST ================= */
-function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  const msg = document.getElementById("toast-message");
-
-  if (!toast || !msg) return;
-
-  msg.innerText = message;
-
-  toast.className = "toast";
-  toast.classList.add("show", type);
-
-  setTimeout(() => {
-    hideToast();
-  }, 3000);
-}
-
-function hideToast() {
-  const toast = document.getElementById("toast");
-  if (toast) toast.classList.remove("show");
-}
-
-/* ================= LOAD TASKS ================= */
+// ================= LOAD TASKS =================
 async function loadTasks() {
-  const list = document.getElementById("taskList");
+  const res = await fetch(API);
+  const data = await res.json();
+
+  allTasks = data.data; // store tasks
+  displayTasks(allTasks); // show initially
+}
+
+// ================= DISPLAY =================
+function displayTasks(tasks) {
+  const list = document.getElementById("task-list");
   if (!list) return;
 
-  try {
-    const res = await fetch(API);
-    const tasks = await res.json();
+  list.innerHTML = "";
 
-    list.innerHTML = "";
+  tasks.forEach(task => {
+    const div = document.createElement("div");
+    div.className = "task";
 
-    if (tasks.length === 0) {
-      list.innerHTML = "<p style='color:#6b7280'>No tasks yet</p>";
-      return;
-    }
+    if (task.pinned) div.classList.add("pinned");
 
-    tasks.forEach(task => {
-      const div = document.createElement("div");
-      div.className = "task-card";
+    const days = getRemainingDays(task.dueDate);
+    if (days < 0) div.classList.add("overdue");
 
-      if (task.completed) div.classList.add("completed");
+    div.innerHTML = `
+      <h3>${task.title}</h3>
+      <p>${task.description || ""}</p>
+      <p>Priority: ${task.priority}</p>
+      <p>${formatDue(task.dueDate)}</p>
 
-      div.innerHTML = `
-        <div class="task-content">
-          <h3>${task.title}</h3>
-          <p>${task.description || ""}</p>
-        </div>
+      <button onclick="toggleComplete('${task._id}', ${task.completed})">
+        ${task.completed ? "Undo" : "Done"}
+      </button>
 
-        <div class="task-actions">
-          <button class="edit" onclick="goEdit('${task._id}')">✏</button>
-          <button class="delete" onclick="deleteTask('${task._id}')">🗑</button>
-        </div>
-      `;
+      <button onclick="editTask('${task._id}')">Edit</button>
+      <button onclick="deleteTask('${task._id}')">Delete</button>
+    `;
 
-      list.appendChild(div);
-    });
+    list.appendChild(div);
+  });
 
-  } catch (err) {
-    console.error("Error loading tasks:", err);
-  }
+  updateStats(tasks);
 }
 
-/* ================= NAV ================= */
-function goEdit(id) {
+// ================= SEARCH (FIXED 🔥) =================
+const searchInput = document.getElementById("search");
+
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    const value = e.target.value.toLowerCase();
+
+    const filtered = allTasks.filter(task =>
+      task.title.toLowerCase().includes(value) ||
+      (task.description && task.description.toLowerCase().includes(value))
+    );
+
+    displayTasks(filtered);
+  });
+}
+
+// ================= ADD TASK =================
+const form = document.getElementById("taskForm");
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const task = {
+      title: title.value,
+      description: description.value,
+      priority: priority.value,
+      dueDate: dueDate.value,
+      pinned: pinned.checked
+    };
+
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(task)
+    });
+
+    window.location.href = "index.html";
+  });
+}
+
+// ================= DELETE =================
+async function deleteTask(id) {
+  await fetch(`${API}/${id}`, { method: "DELETE" });
+  loadTasks();
+}
+
+// ================= COMPLETE =================
+async function toggleComplete(id, status) {
+  await fetch(`${API}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ completed: !status })
+  });
+  loadTasks();
+}
+
+// ================= EDIT =================
+function editTask(id) {
   window.location.href = `edit.html?id=${id}`;
 }
 
-/* ================= DELETE ================= */
-async function deleteTask(id) {
-  try {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
-
-    showToast("Task deleted", "error");
-    loadTasks();
-
-  } catch (err) {
-    showToast("Delete failed", "error");
-  }
-}
-
-/* ================= ADD ================= */
-const addForm = document.getElementById("taskForm");
-
-if (addForm) {
-  addForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const titleInput = document.getElementById("title");
-    const descInput = document.getElementById("description");
-
-    try {
-      await fetch(API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: titleInput.value,
-          description: descInput.value
-        })
-      });
-
-      showToast("Task added", "success");
-
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1200);
-
-    } catch (err) {
-      showToast("Add failed", "error");
-    }
-  });
-}
-
-/* ================= LOAD EDIT TASK ================= */
-async function loadEditTask() {
-  const params = new URLSearchParams(window.location.search);
-  currentTaskId = params.get("id");
-
-  if (!currentTaskId) return;
-
-  try {
-    const res = await fetch(`${API}/${currentTaskId}`);
-    const task = await res.json();
-
-    document.getElementById("title").value = task.title;
-    document.getElementById("description").value = task.description;
-    document.getElementById("completed").checked = task.completed;
-
-  } catch (err) {
-    showToast("Failed to load task", "error");
-  }
-}
-
-/* ================= UPDATE ================= */
+// ================= EDIT LOAD =================
 const editForm = document.getElementById("editForm");
 
 if (editForm) {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  fetch(`${API}/${id}`)
+    .then(res => res.json())
+    .then(data => {
+      const t = data.data;
+
+      title.value = t.title;
+      description.value = t.description;
+      priority.value = t.priority;
+      dueDate.value = t.dueDate?.split("T")[0];
+      pinned.checked = t.pinned;
+      completed.checked = t.completed;
+    });
+
   editForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    if (!currentTaskId) {
-      showToast("Task not found", "error");
-      return;
-    }
+    const updated = {
+      title: title.value,
+      description: description.value,
+      priority: priority.value,
+      dueDate: dueDate.value,
+      pinned: pinned.checked,
+      completed: completed.checked
+    };
 
-    try {
-      await fetch(`${API}/${currentTaskId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: document.getElementById("title").value,
-          description: document.getElementById("description").value,
-          completed: document.getElementById("completed").checked
-        })
-      });
+    await fetch(`${API}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated)
+    });
 
-      showToast("Task updated", "update");
-
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1200);
-
-    } catch (err) {
-      showToast("Update failed", "error");
-    }
+    window.location.href = "index.html";
   });
 }
 
-/* ================= INIT ================= */
+// ================= HELPERS =================
+function getRemainingDays(date) {
+  if (!date) return 0;
+  return Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
+}
+
+function formatDue(date) {
+  if (!date) return "No due date";
+  const d = getRemainingDays(date);
+  return d >= 0 ? `${d} days left` : `Overdue by ${Math.abs(d)} days`;
+}
+
+function updateStats(tasks) {
+  const statsDiv = document.getElementById("stats");
+  if (!statsDiv) return;
+
+  const total = tasks.length;
+  const done = tasks.filter(t => t.completed).length;
+  const overdue = tasks.filter(t => getRemainingDays(t.dueDate) < 0).length;
+
+  statsDiv.innerHTML = `
+    <p>Total: ${total} | Done: ${done} | Overdue: ${overdue}</p>
+  `;
+}
+
+// ================= INIT =================
 loadTasks();
-loadEditTask();
