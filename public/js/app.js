@@ -1,14 +1,24 @@
 const API = "/api/tasks";
 
-let allTasks = []; // store all tasks globally
+let allTasks = [];
+
+// ================= AUTH CHECK =================
+const token = localStorage.getItem("token");
+if (!token && window.location.pathname.includes("index.html")) {
+  window.location.href = "login.html";
+}
 
 // ================= LOAD TASKS =================
 async function loadTasks() {
-  const res = await fetch(API);
-  const data = await res.json();
+  const res = await fetch(API, {
+    headers: {
+      "Authorization": token
+    }
+  });
 
-  allTasks = data.data; // store tasks
-  displayTasks(allTasks); // show initially
+  const data = await res.json();
+  allTasks = data.data;
+  displayTasks(allTasks);
 }
 
 // ================= DISPLAY =================
@@ -47,7 +57,7 @@ function displayTasks(tasks) {
   updateStats(tasks);
 }
 
-// ================= SEARCH (FIXED 🔥) =================
+// ================= SEARCH =================
 const searchInput = document.getElementById("search");
 
 if (searchInput) {
@@ -65,6 +75,7 @@ if (searchInput) {
 
 // ================= ADD TASK =================
 const form = document.getElementById("taskForm");
+
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -79,7 +90,10 @@ if (form) {
 
     await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token
+      },
       body: JSON.stringify(task)
     });
 
@@ -89,7 +103,13 @@ if (form) {
 
 // ================= DELETE =================
 async function deleteTask(id) {
-  await fetch(`${API}/${id}`, { method: "DELETE" });
+  await fetch(`${API}/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": token
+    }
+  });
+
   loadTasks();
 }
 
@@ -97,9 +117,13 @@ async function deleteTask(id) {
 async function toggleComplete(id, status) {
   await fetch(`${API}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": token
+    },
     body: JSON.stringify({ completed: !status })
   });
+
   loadTasks();
 }
 
@@ -115,7 +139,11 @@ if (editForm) {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
 
-  fetch(`${API}/${id}`)
+  fetch(`${API}/${id}`, {
+    headers: {
+      "Authorization": token
+    }
+  })
     .then(res => res.json())
     .then(data => {
       const t = data.data;
@@ -142,7 +170,10 @@ if (editForm) {
 
     await fetch(`${API}/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token
+      },
       body: JSON.stringify(updated)
     });
 

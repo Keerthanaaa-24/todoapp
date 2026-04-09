@@ -38,3 +38,100 @@ h1 {
 button {
   margin: 5px;
 }
+
+/* ===== LOGIN PAGE ===== */
+
+.login-body {
+  margin: 0;
+  font-family: Arial;
+  background: #f4f6f9;
+}
+
+.login-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* LEFT SIDE */
+.login-left {
+  flex: 1;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-left h1 {
+  font-size: 40px;
+}
+
+.login-left p {
+  opacity: 0.8;
+}
+
+/* RIGHT SIDE */
+.login-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 50px;
+  background: white;
+}
+
+.login-right h2 {
+  margin-bottom: 20px;
+}
+
+.login-right input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* PASSWORD BOX */
+.password-box {
+  position: relative;
+}
+
+.password-box span {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+}
+
+/* BUTTON */
+.login-right button {
+  width: 100%;
+  padding: 10px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-right button:hover {
+  background: #3730a3;
+}
+
+/* ERROR */
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+.save-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0;
+
+  width: 100%;
+  justify-content: flex-start !important; /* 🔥 FORCE LEFT */
+}
