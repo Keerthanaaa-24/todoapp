@@ -1,3 +1,4 @@
+<!-- public/login.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,14 +8,14 @@
 <body class="login-body">
 
 <div class="login-container">
-  
-  <!-- LEFT SIDE -->
+
+  <!-- LEFT -->
   <div class="login-left">
     <h1>Task Manager</h1>
     <p>Organize your work. Boost your productivity.</p>
   </div>
 
-  <!-- RIGHT SIDE -->
+  <!-- RIGHT -->
   <div class="login-right">
     <h2>Welcome Back 👋</h2>
 
@@ -25,10 +26,13 @@
         <input type="password" id="password" placeholder="Password" required>
         <span id="togglePassword">👁</span>
       </div>
-        <div class="save-container">
+
+      <!-- SAVE OPTION -->
+      <div class="save-wrapper">
         <input type="checkbox" id="save">
         <label for="save">Save</label>
-        </div>
+      </div>
+
       <button type="submit">Login</button>
 
       <p id="error" class="error"></p>
