@@ -1,16 +1,14 @@
-// Toggle password 👁
+// public/js/login.js
+
 const toggle = document.getElementById("togglePassword");
 const password = document.getElementById("password");
 
+// SHOW/HIDE PASSWORD
 toggle.addEventListener("click", () => {
-  if (password.type === "password") {
-    password.type = "text";
-  } else {
-    password.type = "password";
-  }
+  password.type = password.type === "password" ? "text" : "password";
 });
 
-// Handle login
+// LOGIN
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -18,7 +16,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   const pass = document.getElementById("password").value;
 
   try {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -33,10 +31,8 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       return;
     }
 
-    // Save token
     localStorage.setItem("token", data.token);
 
-    // Redirect
     window.location.href = "index.html";
 
   } catch (err) {

@@ -1,24 +1,27 @@
-const API = "/api/tasks";
+const API = "http://localhost:5000/api/tasks";
 
 let allTasks = [];
-
-// ================= AUTH CHECK =================
 const token = localStorage.getItem("token");
+
+// 🔐 Redirect if not logged in
 if (!token && window.location.pathname.includes("index.html")) {
   window.location.href = "login.html";
 }
 
 // ================= LOAD TASKS =================
 async function loadTasks() {
-  const res = await fetch(API, {
-    headers: {
-      "Authorization": token
-    }
-  });
+  try {
+    const res = await fetch(API, {
+      headers: { "Authorization": token }
+    });
 
-  const data = await res.json();
-  allTasks = data.data;
-  displayTasks(allTasks);
+    const data = await res.json();
+    allTasks = data.data || [];
+    displayTasks(allTasks);
+
+  } catch (err) {
+    console.error("Load error:", err);
+  }
 }
 
 // ================= DISPLAY =================
@@ -32,10 +35,16 @@ function displayTasks(tasks) {
     const div = document.createElement("div");
     div.className = "task";
 
-    if (task.pinned) div.classList.add("pinned");
-
     const days = getRemainingDays(task.dueDate);
-    if (days < 0) div.classList.add("overdue");
+
+    // 🎨 STATUS COLORS
+    if (task.completed) {
+      div.classList.add("done");
+    } else if (days < 0) {
+      div.classList.add("overdue");
+    } else {
+      div.classList.add("remaining");
+    }
 
     div.innerHTML = `
       <h3>${task.title}</h3>
@@ -81,50 +90,63 @@ if (form) {
     e.preventDefault();
 
     const task = {
-      title: title.value,
-      description: description.value,
-      priority: priority.value,
-      dueDate: dueDate.value,
-      pinned: pinned.checked
+      title: document.getElementById("title").value,
+      description: document.getElementById("description").value,
+      priority: document.getElementById("priority").value,
+      dueDate: document.getElementById("dueDate").value,
+      pinned: document.getElementById("pinned")?.checked || false
     };
 
-    await fetch(API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": token
-      },
-      body: JSON.stringify(task)
-    });
+    try {
+      await fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token
+        },
+        body: JSON.stringify(task)
+      });
 
-    window.location.href = "index.html";
+      window.location.href = "index.html";
+
+    } catch (err) {
+      console.error("Add error:", err);
+    }
   });
 }
 
 // ================= DELETE =================
 async function deleteTask(id) {
-  await fetch(`${API}/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Authorization": token
-    }
-  });
+  try {
+    await fetch(`${API}/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": token }
+    });
 
-  loadTasks();
+    loadTasks();
+
+  } catch (err) {
+    console.error("Delete error:", err);
+  }
 }
 
 // ================= COMPLETE =================
 async function toggleComplete(id, status) {
-  await fetch(`${API}/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": token
-    },
-    body: JSON.stringify({ completed: !status })
-  });
+  try {
+    await fetch(`${API}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token
+      },
+      body: JSON.stringify({ completed: !status })
+    });
 
-  loadTasks();
+    loadTasks();
+
+  } catch (err) {
+    console.error("Update error:", err);
+  }
 }
 
 // ================= EDIT =================
@@ -140,32 +162,30 @@ if (editForm) {
   const id = params.get("id");
 
   fetch(`${API}/${id}`, {
-    headers: {
-      "Authorization": token
-    }
+    headers: { "Authorization": token }
   })
     .then(res => res.json())
     .then(data => {
       const t = data.data;
 
-      title.value = t.title;
-      description.value = t.description;
-      priority.value = t.priority;
-      dueDate.value = t.dueDate?.split("T")[0];
-      pinned.checked = t.pinned;
-      completed.checked = t.completed;
+      document.getElementById("title").value = t.title;
+      document.getElementById("description").value = t.description;
+      document.getElementById("priority").value = t.priority;
+      document.getElementById("dueDate").value = t.dueDate?.split("T")[0];
+      document.getElementById("pinned").checked = t.pinned;
+      document.getElementById("completed").checked = t.completed;
     });
 
   editForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const updated = {
-      title: title.value,
-      description: description.value,
-      priority: priority.value,
-      dueDate: dueDate.value,
-      pinned: pinned.checked,
-      completed: completed.checked
+      title: document.getElementById("title").value,
+      description: document.getElementById("description").value,
+      priority: document.getElementById("priority").value,
+      dueDate: document.getElementById("dueDate").value,
+      pinned: document.getElementById("pinned").checked,
+      completed: document.getElementById("completed").checked
     };
 
     await fetch(`${API}/${id}`, {
